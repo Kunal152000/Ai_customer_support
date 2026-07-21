@@ -1,0 +1,9 @@
+# ===========================
+# Environment Variables and unnecessary files to be ignored by Git
+# ===========================
+
+.env
+venv/
+app/__pycache__/
+app/auth/__pycache__/
+app/database/__pycache__/
