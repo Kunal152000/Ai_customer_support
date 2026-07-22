@@ -7,3 +7,4 @@ venv/
 app/__pycache__/
 app/auth/__pycache__/
 app/database/__pycache__/
+storage/documents/

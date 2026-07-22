@@ -7,7 +7,7 @@ from app.auth.models import User
 class UserRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
-
+    
     async def create(self, **data) -> User:
         user = User(**data)
         self.db.add(user)
