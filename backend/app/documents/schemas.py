@@ -8,13 +8,10 @@ from app.documents.enums import DocumentStatus, DocumentType
 
 class DocumentResponse(BaseModel):
     id: UUID
-
     owner_name: str
-
     original_filename: str
     stored_filename: str
     storage_location: str
-
     document_type: DocumentType
     # mime_type: str
     file_size: int

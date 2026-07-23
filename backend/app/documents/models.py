@@ -1,19 +1,10 @@
 from uuid import uuid4
 from datetime import datetime
-from sqlalchemy import (
-    DateTime,
-    String,
-    BigInteger,
-    Integer,
-    func,
-    Enum
-)
+from sqlalchemy import (DateTime,String,BigInteger,Integer,func,Enum)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.documents.enums import DocumentStatus, DocumentType
 from app.database.base import Base
-
-
 
 class DocumentMetadata(Base):
 

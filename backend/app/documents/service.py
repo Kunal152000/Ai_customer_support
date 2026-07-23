@@ -1,7 +1,7 @@
 # import hashlib
 # import mimetypes
 from pathlib import Path
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 from fastapi import HTTPException, UploadFile
 
@@ -9,7 +9,10 @@ from app.documents.enums import DocumentStatus, DocumentType
 from app.documents.models import DocumentMetadata
 from app.documents.repository import DocumentRepository
 from app.storage.abstract_storage_base import StorageService
-
+from app.storage.local import LocalStorageService
+from app.parsers.parser_factory import ParserFactory
+from app.chunking.service import ChunkService
+from app.chunking.abstract_chunking_base import BaseChunker
 class DocumentService:
     def __init__(self,repository: DocumentRepository,storage: StorageService):
         self.repository = repository
@@ -51,6 +54,7 @@ class DocumentService:
             raise
     
     def _get_document_type(self, extension: str) -> DocumentType:
+    
         mapping = {
             ".pdf": DocumentType.PDF,
             ".doc": DocumentType.DOC,
@@ -62,3 +66,29 @@ class DocumentService:
         }
 
         return mapping.get(extension, DocumentType.TXT)
+
+class ProcessingService:
+    def __init__(self,
+                 repository: DocumentRepository,
+                 parser_factory: ParserFactory,
+                 chunker: BaseChunker, 
+                 chunk_service: ChunkService,
+                 storage: LocalStorageService
+                 ):
+        self.repository = repository
+        self.chunk_service = chunk_service
+        self.chunker = chunker
+        self.parser_factory = parser_factory
+        self.storage = storage
+
+    async def process_document(self,document_id: UUID,) -> int:
+        document = await self.repository.get_document(document_id)
+        if document is None:
+            raise ValueError("Document not found")
+        
+        path = self.storage.read(document.storage_location)
+        parser = self.parser_factory.get_parser(path)
+        text = parser.parse(path)
+        chunks = self.chunker.chunk(text)
+
+        return await self.chunk_service.save_chunks(document.id,chunks)

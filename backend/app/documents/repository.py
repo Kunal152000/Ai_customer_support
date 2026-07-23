@@ -10,7 +10,7 @@ class DocumentRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_document( self, document: DocumentMetadata,) -> DocumentMetadata: 
+    async def create_document( self, document: DocumentMetadata) -> DocumentMetadata: 
         self.db.add(document)
         await self.db.commit()
         await self.db.refresh(document)
