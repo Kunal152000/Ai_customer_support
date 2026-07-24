@@ -4,11 +4,7 @@
 
 .env
 venv/
-app/__pycache__/
-app/auth/__pycache__/
-app/database/__pycache__/
-app/chunking/__pycache__/
-app/documents/__pycache__/
-app/storage/__pycache__/
-app/parsers/__pycache__/
+__pycache__/
+*.py[cod]
+*$py.class
 storage/documents/
