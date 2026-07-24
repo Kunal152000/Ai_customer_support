@@ -1,4 +1,6 @@
 from app.auth.models import User
+from app.chunking.models import DocumentChunk
+from app.embeddings.models import DocumentEmbedding
 from app.database.base import Base
 from app.database.session import engine
 

@@ -2,7 +2,7 @@ from uuid import uuid4
 from datetime import datetime
 from sqlalchemy import (DateTime,String,Integer,func)
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column,relationship
 from app.database.base import Base
 
 class DocumentChunk(Base):
@@ -14,3 +14,5 @@ class DocumentChunk(Base):
     chunk_text: Mapped[str] = mapped_column(String,nullable=False)
     word_count: Mapped[int] = mapped_column(Integer,nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now(),nullable=False)
+    # Making realtionship with embedding table and chunk table
+    embedding = relationship("DocumentEmbedding", uselist=False,cascade="all, delete",back_populates="chunk")
