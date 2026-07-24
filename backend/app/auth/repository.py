@@ -16,9 +16,7 @@ class UserRepository:
         return user
 
     async def get_by_email(self, email: str) -> User | None:
-        return await self.db.scalar(
-            select(User).where(User.email == email)
-        )
+        return await self.db.scalar(select(User).where(User.email == email))
 
     async def get_by_id(self, user_id: uuid.UUID) -> User | None:
         return await self.db.get(User, user_id)

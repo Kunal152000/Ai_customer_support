@@ -2,10 +2,11 @@ from uuid import UUID
 
 from app.chunking.models import DocumentChunk
 from app.chunking.repository import ChunkRepository
+from sqlalchemy.ext.asyncio import AsyncSession
 
 class ChunkService:
-    def __init__(self,repository: ChunkRepository):
-        self.repository = repository
+    def __init__(self,db:AsyncSession):
+        self.repository = ChunkRepository(db)
 
     async def save_chunks(self,document_id: UUID,chunks: list[str],) -> int:
 

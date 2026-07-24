@@ -13,7 +13,7 @@ from app.storage.exceptions import (
 
 class LocalStorageService(StorageService):
 
-    def __init__(self, storage_root: str = "storage/documents",):
+    def __init__(self, storage_root: str = "storage/documents"):
         self.storage_root = Path(storage_root)
         self.storage_root.mkdir(parents=True, exist_ok=True)
 

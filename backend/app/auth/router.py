@@ -41,7 +41,7 @@ async def register(
     data: RegisterRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    service = AuthService(UserRepository(db))
+    service = AuthService(db)
     user = await service.register(data)
     return UserResponse.model_validate(user)
 
@@ -50,5 +50,5 @@ async def login(
     data: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    service = AuthService(UserRepository(db))
+    service = AuthService(db)
     return await service.login(data)

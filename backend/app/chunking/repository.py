@@ -1,5 +1,3 @@
-# app/documents/chunk_repository.py
-
 from uuid import UUID
 
 from sqlalchemy import delete, select
@@ -26,3 +24,9 @@ class ChunkRepository:
         await self.db.execute(delete(DocumentChunk).where(DocumentChunk.document_id == document_id))
 
         await self.db.commit()
+    
+    async def get_chunks_by_ids(self, chunk_ids):
+        stmt = select(DocumentChunk).where(DocumentChunk.id.in_(chunk_ids))
+        results = await self.db.execute(stmt)
+
+        return results.scalars().all()

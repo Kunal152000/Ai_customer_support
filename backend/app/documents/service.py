@@ -4,19 +4,20 @@ from pathlib import Path
 from uuid import uuid4, UUID
 
 from fastapi import HTTPException, UploadFile
-
 from app.documents.enums import DocumentStatus, DocumentType
 from app.documents.models import DocumentMetadata
 from app.documents.repository import DocumentRepository
-from app.storage.abstract_storage_base import StorageService
 from app.storage.local import LocalStorageService
 from app.parsers.parser_factory import ParserFactory
 from app.chunking.service import ChunkService
-from app.chunking.abstract_chunking_base import BaseChunker
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.documents.repository import DocumentRepository
+from app.storage.local import LocalStorageService
+from app.chunking.recursive_chunker import RecursiveChunker
 class DocumentService:
-    def __init__(self,repository: DocumentRepository,storage: StorageService):
-        self.repository = repository
-        self.storage = storage
+    def __init__(self,db: AsyncSession):
+        self.repository = DocumentRepository(db)
+        self.storage = LocalStorageService()
 
     async def upload_document(self,file: UploadFile,owner_name: str,) -> DocumentMetadata:
         if not file.filename:
@@ -68,18 +69,13 @@ class DocumentService:
         return mapping.get(extension, DocumentType.TXT)
 
 class ProcessingService:
-    def __init__(self,
-                 repository: DocumentRepository,
-                 parser_factory: ParserFactory,
-                 chunker: BaseChunker, 
-                 chunk_service: ChunkService,
-                 storage: LocalStorageService
-                 ):
-        self.repository = repository
-        self.chunk_service = chunk_service
-        self.chunker = chunker
-        self.parser_factory = parser_factory
-        self.storage = storage
+
+    def __init__(self, db: AsyncSession):
+        self.repository = DocumentRepository(db)
+        self.storage = LocalStorageService()
+        self.parser_factory = ParserFactory()
+        self.chunk_service = ChunkService(db)
+        self.chunker = RecursiveChunker()   
 
     async def process_document(self,document_id: UUID,) -> int:
         document = await self.repository.get_document(document_id)
