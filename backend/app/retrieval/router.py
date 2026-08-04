@@ -6,8 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_db
 from app.retrieval.schemas import RetrievalRequest, RetrievalResponse
 from app.retrieval.service import RetrievalService
+from app.auth.dependencies import get_current_user
 
-router = APIRouter(tags=["Retrieval"])
+router = APIRouter(tags=["Retrieval"], dependencies=[Depends(get_current_user)])
 
 
 @router.post("/retrieval", response_model=RetrievalResponse)

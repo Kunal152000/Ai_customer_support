@@ -2,7 +2,7 @@ from app.embeddings.ai_provider import OpenRouterEmbeddingProvider
 from app.embeddings.service import EmbeddingService
 from app.embeddings.repository import DocumentEmbeddingRepository
 from app.chunking.repository import ChunkRepository
-
+import os
 
 class RetrievalService:
 
@@ -18,16 +18,12 @@ class RetrievalService:
 
         self.chunk_repository = ChunkRepository(db)
 
-    async def retrieve(
-        self,
-        question: str,
-        top_k: int,
-    ):
+    async def retrieve(self,question: str):
         query_embedding = await self.embedding_service.generate_query_embedding(question)
 
         similar_chunks = await self.embedding_repository.find_similar_embeddings(
             query_embedding=query_embedding,
-            limit=top_k,
+            limit=os.getenv("TOP_K")
         )
 
         if not similar_chunks:

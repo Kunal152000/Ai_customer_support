@@ -10,7 +10,7 @@ class EmbeddingService:
         self.repository = repository
     
     async def generate_embeddings(self,chunks: list[DocumentChunk]):
-        print("This is chunks data",chunks)
+        # print("This is chunks data",chunks)
         texts = [chunk.chunk_text for chunk in chunks]
 
         vectors = await self.provider.embed(texts)

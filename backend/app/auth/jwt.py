@@ -23,6 +23,6 @@ def create_access_token(user_id: str) -> str:
 
 def decode_access_token(token: str) -> dict | None:
     try:
-        return jwt.decode(token, SECRET_KEY, algorithm=ALGORITHM)
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
         return None

@@ -5,10 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
 from app.documents.service import ProcessingService
+from app.auth.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/chunking",
     tags=["Chunking"],
+    dependencies=[Depends(get_current_user)],
 )
 
 @router.post("/{document_id}/process")
