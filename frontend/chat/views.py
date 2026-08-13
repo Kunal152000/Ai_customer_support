@@ -67,14 +67,20 @@ class ChatView:
                     st.info("No documents uploaded yet. Use the 'Upload New' tab to add one.")
                 else:
                     for doc in docs:
-                        c1, c2, c3 = st.columns([3, 1, 1])
-                        c1.markdown(f"**{doc['original_filename']}**")
+                        c1, c2, c3, c4 = st.columns([3, 1, 1, 1])
+                        c1.markdown(f"**{doc['original_filename']}**\n\n*Uploaded by: {doc.get('owner_name', 'Unknown')}*")
                         c2.caption(doc.get("document_type", ""))
                         if c3.button("Chat →", key=f"pick_{doc['id']}"):
                             st.session_state["document_id"] = doc["id"]
                             st.session_state["document_name"] = doc["original_filename"]
                             st.session_state.pop("messages", None)
                             st.rerun()
+                        if c4.button("🗑️", key=f"del_{doc['id']}", help="Delete document completely"):
+                            try:
+                                self.service.delete_document(doc["id"])
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Failed to delete: {e}")
 
             # ── Tab 2: upload new ──────────────────────────────────────────────
             with tab_new:
@@ -90,7 +96,6 @@ class ChatView:
                             self.service.upload_and_process(
                                 file_bytes=file.read(),
                                 filename=file.name,
-                                owner_name=owner,
                             )
                             st.success("✅ Document ready! You can now start chatting.")
                             st.rerun()

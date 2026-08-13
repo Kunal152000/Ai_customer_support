@@ -1,6 +1,6 @@
 from uuid import uuid4
 from datetime import datetime
-from sqlalchemy import (DateTime,String,BigInteger,Integer,func,Enum)
+from sqlalchemy import (DateTime,String,BigInteger,Integer,func,Enum,ForeignKey)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.documents.enums import DocumentStatus, DocumentType
@@ -20,6 +20,12 @@ class DocumentMetadata(Base):
     owner_name: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
+    )
+
+    email: Mapped[str | None] = mapped_column(
+        String(255),
+        ForeignKey("users.email"),
+        nullable=True,
     )
 
     # Original file details

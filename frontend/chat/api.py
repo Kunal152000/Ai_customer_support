@@ -22,6 +22,9 @@ class ChatAPI:
     def process(self, document_id: UUID) -> dict:
         return self.client.post(f"/chunking/{document_id}/process")
 
+    def delete_document(self, document_id: str) -> dict:
+        return self.client.delete(f"/documents/{document_id}")
+
     def chat(self, question: str, document_id: str | None = None) -> ChatResponse:
         payload = {"question": question}
         if document_id:

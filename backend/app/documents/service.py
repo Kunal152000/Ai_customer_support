@@ -19,7 +19,7 @@ class DocumentService:
         self.repository = DocumentRepository(db)
         self.storage = LocalStorageService()
 
-    async def upload_document(self,file: UploadFile,owner_name: str,) -> DocumentMetadata:
+    async def upload_document(self, file: UploadFile, owner_name: str, email: str) -> DocumentMetadata:
         if not file.filename:
             raise HTTPException(400, "Filename is missing.")
 
@@ -37,6 +37,7 @@ class DocumentService:
             document = DocumentMetadata(
                 # id
                 owner_name=owner_name,
+                email=email,
                 original_filename=file.filename,
                 stored_filename=stored_filename,
                 storage_location=storage_location,
@@ -54,6 +55,31 @@ class DocumentService:
             self.storage.delete(storage_location)
             raise
     
+    async def delete_document(self, document_id: UUID, user_email: str) -> None:
+        document = await self.repository.get_document(document_id)
+        if not document:
+            raise HTTPException(404, "Document not found")
+        
+        # Verify ownership
+        if document.email != user_email:
+            raise HTTPException(403, "You do not have permission to delete this document.")
+            
+        # Optional: Delete chunks explicitly if DB doesn't have ON DELETE CASCADE for chunks. 
+        # Since embeddings have ON DELETE CASCADE off chunks, deleting chunks will delete embeddings.
+        from app.chunking.service import ChunkService
+        chunk_service = ChunkService(self.repository.db)
+        await chunk_service.delete_chunks(document_id)
+        
+        # Delete file from storage
+        try:
+            self.storage.delete(document.storage_location)
+        except Exception as e:
+            # Continue even if physical file is missing to ensure DB consistency
+            print(f"Warning: could not delete file {document.storage_location}: {e}")
+            
+        # Delete metadata
+        await self.repository.delete_document(document)
+
     def _get_document_type(self, extension: str) -> DocumentType:
     
         mapping = {

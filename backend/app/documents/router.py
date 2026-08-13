@@ -17,7 +17,7 @@ async def list_documents(
     current_user: User = Depends(get_current_user),
 ):
     repo = DocumentRepository(db)
-    return await repo.list_by_owner(current_user.name)
+    return await repo.list_by_email(current_user.email)
 
 
 @router.post("/upload", response_model=DocumentResponse)
@@ -27,5 +27,24 @@ async def upload_document(
     current_user: User = Depends(get_current_user),
 ):
     service = DocumentService(db)
-    document = await service.upload_document(file=file, owner_name=current_user.name)
-    return DocumentResponse.model_validate(document)
+    document = await service.upload_document(file=file, owner_name=current_user.name, email=current_user.email)
+    return DocumentResponse.model_validate(document)
+
+
+@router.delete("/{document_id}")
+async def delete_document(
+    document_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    from uuid import UUID
+    try:
+        doc_uuid = UUID(document_id)
+    except ValueError:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+    service = DocumentService(db)
+    await service.delete_document(doc_uuid, current_user.email)
+    return {"message": "Document deleted successfully"}
+

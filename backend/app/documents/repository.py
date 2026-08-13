@@ -41,10 +41,10 @@ class DocumentRepository:
         )
         return list(result.scalars().all())
 
-    async def list_by_owner(self, owner_name: str) -> list[DocumentMetadata]:
+    async def list_by_email(self, email: str) -> list[DocumentMetadata]:
         result = await self.db.execute(
             select(DocumentMetadata)
-            .where(DocumentMetadata.owner_name == owner_name)
+            .where(DocumentMetadata.email == email)
             .order_by(DocumentMetadata.created_at.desc())
         )
         return list(result.scalars().all())

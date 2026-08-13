@@ -17,6 +17,13 @@ class ChatService:
         document_id = st.session_state.get("document_id")
         return self.api.chat(question, document_id=document_id).answer
 
+    def delete_document(self, document_id: str) -> None:
+        self.api.delete_document(document_id)
+        if st.session_state.get("document_id") == str(document_id):
+            st.session_state.pop("document_id", None)
+            st.session_state.pop("document_name", None)
+            st.session_state.pop("messages", None)
+
     @staticmethod
     def has_document() -> bool:
         return bool(st.session_state.get("document_id"))

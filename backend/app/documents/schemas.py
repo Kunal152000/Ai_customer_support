@@ -9,6 +9,7 @@ from app.documents.enums import DocumentStatus, DocumentType
 class DocumentResponse(BaseModel):
     id: UUID
     owner_name: str
+    email: str | None = None
     original_filename: str
     stored_filename: str
     storage_location: str
@@ -29,7 +30,8 @@ class DocumentResponse(BaseModel):
 
 class DocumentListResponse(BaseModel):
     id: UUID
-
+    owner_name: str  # We should include owner_name to show it on frontend
+    email: str | None = None
     original_filename: str
 
     document_type: DocumentType
