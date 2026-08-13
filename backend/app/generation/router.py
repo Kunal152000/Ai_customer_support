@@ -17,7 +17,10 @@ async def generate_response(request: GenerationRequest,db: AsyncSession = Depend
     
     generation_service = GenerationService(db)
 
-    answer = await generation_service.answer(request.question)
+    answer = await generation_service.answer(
+        question=request.question,
+        document_id=request.document_id,
+    )
     print("This is answer to print",answer)
     return GenerationResponse(
         answer=answer

@@ -1,9 +1,10 @@
+from uuid import UUID
 from pydantic import BaseModel
 
 
 class RetrievalRequest(BaseModel):
     question: str
-    # top_k: int
+    document_id: UUID | None = None
 
 
 class RetrievedChunk(BaseModel):

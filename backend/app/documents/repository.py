@@ -40,3 +40,11 @@ class DocumentRepository:
             )
         )
         return list(result.scalars().all())
+
+    async def list_by_owner(self, owner_name: str) -> list[DocumentMetadata]:
+        result = await self.db.execute(
+            select(DocumentMetadata)
+            .where(DocumentMetadata.owner_name == owner_name)
+            .order_by(DocumentMetadata.created_at.desc())
+        )
+        return list(result.scalars().all())

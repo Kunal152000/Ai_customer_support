@@ -20,7 +20,7 @@ async def retrieve_context(
 
     chunks = await retrieval_service.retrieve(
         question=request.question,
-        top_k=int(os.getenv("TOP_K", 3)),
+        document_id=request.document_id,
     )
 
     return RetrievalResponse(chunks=chunks)

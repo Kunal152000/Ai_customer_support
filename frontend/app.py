@@ -1,13 +1,12 @@
 import streamlit as st
 
 from auth.views import AuthView
+from chat.views import ChatView
 from config.session import SessionManager
 from core.container import Container
 
 
-# ---------------------------------------------------------
-# Streamlit Configuration
-# ---------------------------------------------------------
+# ── Page config ───────────────────────────────────────────────────────────────
 
 st.set_page_config(
     page_title="AI Support",
@@ -17,67 +16,32 @@ st.set_page_config(
 )
 
 
-# ---------------------------------------------------------
-# Dependency Container
-# ---------------------------------------------------------
+# ── Bootstrap (cached singleton) ──────────────────────────────────────────────
 
 @st.cache_resource
 def get_container() -> Container:
     return Container()
 
 
-# ---------------------------------------------------------
-# Application Initialization
-# ---------------------------------------------------------
-
 container = get_container()
-
 session_manager = container.session_manager
 session_manager.initialize()
 
-auth_view = AuthView(
-    auth_service=container.auth_service
-)
+auth_view = AuthView(auth_service=container.auth_service)
 
 
-# ---------------------------------------------------------
-# Authentication Routing
-# ---------------------------------------------------------
+# ── Routing ───────────────────────────────────────────────────────────────────
 
 if not session_manager.is_authenticated():
-
     if "auth_page" not in st.session_state:
         st.session_state["auth_page"] = "login"
 
     if st.session_state["auth_page"] == "signup":
         auth_view.signup()
-
     else:
         auth_view.login()
 
-
-# ---------------------------------------------------------
-# Authenticated Application
-# ---------------------------------------------------------
-
 else:
-
     user = session_manager.get_user()
-
-    st.title("AI Support")
-
-    if user:
-        st.write(
-            f"Welcome, {user.name}!"
-        )
-    else:
-        st.write("Welcome!")
-
-    st.success(
-        "You are successfully authenticated."
-    )
-
-    if st.button("Logout"):
-        container.auth_service.logout()
-        st.session_state["auth_page"] = "login"
-        st.rerun()
+    chat_view = ChatView(chat_service=container.chat_service, auth_service=container.auth_service, user=user)
+    chat_view.render()
