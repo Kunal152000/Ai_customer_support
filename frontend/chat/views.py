@@ -91,13 +91,14 @@ class ChatView:
                 )
                 if file and st.button("🚀 Upload & Process", use_container_width=True, type="primary"):
                     owner = self.user.name if self.user else "unknown"
-                    with st.spinner("Processing your document… this may take a moment."):
+                    with st.spinner("Uploading document…"):
                         try:
                             self.service.upload_and_process(
                                 file_bytes=file.read(),
                                 filename=file.name,
                             )
-                            st.success("✅ Document ready! You can now start chatting.")
+                            st.success("✅ Document uploaded! Embeddings are being generated in the background.")
+                            st.info("⏳ Please wait ~1 minute for processing to complete before starting a chat.")
                             st.rerun()
                         except HTTPError as e:
                             st.error(f"Upload failed: {e.response.text if e.response else str(e)}")
@@ -144,6 +145,14 @@ class ChatView:
                         answer = f"⚠️ Error: {e.response.text if e.response else str(e)}"
                     except Exception as e:
                         answer = f"⚠️ Something went wrong: {e}"
-                st.markdown(answer)
+
+                # Simulate streaming: feed the complete answer word-by-word
+                def _stream(text: str):
+                    import time
+                    for word in text.split(" "):
+                        yield word + " "
+                        time.sleep(0.05)
+
+                st.write_stream(_stream(answer))
 
             st.session_state["messages"].append({"role": "assistant", "content": answer})

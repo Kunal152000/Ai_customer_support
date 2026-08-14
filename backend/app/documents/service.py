@@ -101,16 +101,32 @@ class ProcessingService:
         self.storage = LocalStorageService()
         self.parser_factory = ParserFactory()
         self.chunk_service = ChunkService(db)
-        self.chunker = RecursiveChunker()   
+        self.chunker = RecursiveChunker()
+        # Embedding dependencies
+        from app.embeddings.ai_provider import OpenRouterEmbeddingProvider
+        from app.embeddings.repository import DocumentEmbeddingRepository
+        from app.embeddings.service import EmbeddingService
+        self.embedding_service = EmbeddingService(
+            provider=OpenRouterEmbeddingProvider(),
+            repository=DocumentEmbeddingRepository(db),
+        )
 
-    async def process_document(self,document_id: UUID,) -> int:
+    async def process_document(self, document_id: UUID) -> int:
         document = await self.repository.get_document(document_id)
         if document is None:
             raise ValueError("Document not found")
-        
+
+        # 1. Parse text from file
         path = self.storage.read(document.storage_location)
         parser = self.parser_factory.get_parser(path)
         text = parser.parse(path)
-        chunks = self.chunker.chunk(text)
 
-        return await self.chunk_service.save_chunks(document.id,chunks)
+        # 2. Chunk and save
+        chunks = self.chunker.chunk(text)
+        await self.chunk_service.save_chunks(document.id, chunks)
+
+        # 3. Retrieve saved chunk models and generate + store embeddings
+        saved_chunks = await self.chunk_service.get_chunks(document.id)
+        await self.embedding_service.generate_embeddings(saved_chunks)
+
+        return len(saved_chunks)
