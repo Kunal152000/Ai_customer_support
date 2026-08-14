@@ -43,5 +43,15 @@ if not session_manager.is_authenticated():
 
 else:
     user = session_manager.get_user()
+    # On a hard page refresh the cookie restores the token but user is lost from memory.
+    # Silently re-fetch the user from the backend so the chat page renders correctly.
+    if user is None:
+        try:
+            user = container.auth_service.get_current_user()
+        except Exception:
+            # Token is expired or invalid — force logout and back to login page.
+            session_manager.logout()
+            st.rerun()
+
     chat_view = ChatView(chat_service=container.chat_service, auth_service=container.auth_service, user=user)
     chat_view.render()

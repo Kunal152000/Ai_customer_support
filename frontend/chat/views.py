@@ -108,7 +108,15 @@ class ChatView:
 
 
     def _render_chat(self) -> None:
-        st.markdown(f"## 💬 Chat — *{st.session_state.get('document_name', 'Document')}*")
+        c1, c2 = st.columns([8, 2])
+        c1.markdown(f"## 💬 Chat — *{st.session_state.get('document_name', 'Document')}*")
+        
+        if c2.button("← Back to docs", use_container_width=True):
+            st.session_state.pop("document_id", None)
+            st.session_state.pop("document_name", None)
+            st.session_state.pop("messages", None)
+            st.rerun()
+            
         st.divider()
 
         # Initialise history
