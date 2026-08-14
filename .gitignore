@@ -8,4 +8,10 @@ venv/
 __pycache__/
 *.py[cod]
 *$py.class
+
+#storage
 backend/storage/documents/
+
+#Env files
+.env
+
