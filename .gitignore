@@ -1,0 +1,11 @@
+# ===========================
+# Environment Variables and unnecessary files to be ignored by Git
+# ===========================
+
+.env/
+venv/
+
+__pycache__/
+*.py[cod]
+*$py.class
+backend/storage/documents/
