@@ -7,9 +7,9 @@ from app.auth.models import User
 from app.auth.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse
 from app.auth.service import AuthService
 from app.database.session import get_db
-import os
 from sqlalchemy import delete, select
 from app.documents.models import DocumentMetadata
+from app.storage.supabase_storage import SupabaseStorageService
 
 health_rotuer = APIRouter(prefix="/health", tags=["Health Check"])
 @health_rotuer.get("/")
@@ -68,16 +68,16 @@ async def delete_account(
     """
     Deletes the current user's account and all associated documents, chunks, and embeddings entirely.
     """
-    # 1. Fetch all user documents to wipe physical files off the local disk
+    # 1. Fetch all user documents to wipe physical files off the remote bucket
     result = await db.execute(select(DocumentMetadata).where(DocumentMetadata.email == current_user.email))
     docs = result.scalars().all()
+    storage = SupabaseStorageService()
     
     for doc in docs:
-        if os.path.exists(doc.storage_location):
-            try:
-                os.remove(doc.storage_location)
-            except Exception as e:
-                print(f"Failed to delete physical file {doc.storage_location}: {e}")
+        try:
+            storage.delete(doc.storage_location)
+        except Exception as e:
+            print(f"Failed to delete physical remote file {doc.storage_location}: {e}")
                 
     # 2. Database Cascade Deletion
     # PostgreSQL handles the cascading hierarchy natively!

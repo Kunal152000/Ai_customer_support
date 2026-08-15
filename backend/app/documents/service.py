@@ -4,18 +4,17 @@ from fastapi import HTTPException, UploadFile
 from app.documents.enums import DocumentStatus, DocumentType
 from app.documents.models import DocumentMetadata
 from app.documents.repository import DocumentRepository
-from app.storage.local import LocalStorageService
+from app.storage.supabase_storage import SupabaseStorageService
 from app.parsers.parser_factory import ParserFactory
 from app.chunking.service import ChunkService
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.documents.repository import DocumentRepository
-from app.storage.local import LocalStorageService
 from app.chunking.recursive_chunker import RecursiveChunker
 from app.chunking.metadata_extractor import MetadataExtractor
 class DocumentService:
     def __init__(self,db: AsyncSession):
         self.repository = DocumentRepository(db)
-        self.storage = LocalStorageService()
+        self.storage = SupabaseStorageService()
 
     async def upload_document(self, file: UploadFile, owner_name: str, email: str) -> DocumentMetadata:
         if not file.filename:
@@ -95,7 +94,7 @@ class ProcessingService:
     def __init__(self, db: AsyncSession):
         self.metadata_extractor = MetadataExtractor()
         self.repository = DocumentRepository(db)
-        self.storage = LocalStorageService()
+        self.storage = SupabaseStorageService()
         self.parser_factory = ParserFactory()
         self.chunk_service = ChunkService(db)
         self.chunker = RecursiveChunker()
