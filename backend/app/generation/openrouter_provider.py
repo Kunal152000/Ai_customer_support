@@ -11,16 +11,23 @@ class OpenRouterProvider(AIProvider):
         )
         self.model = os.getenv("OPENROUTER_MODEL")
 
-    async def generate_response(self, prompt: str):
+    async def generate_response(
+        self, 
+        prompt: str, 
+        response_format: dict | None = None,
+        temperature: float = 1.0
+    ):
    
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
-        )
+        kwargs = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": temperature
+        }
+        
+        if response_format:
+            kwargs["response_format"] = response_format
+            
+        response = await self.client.chat.completions.create(**kwargs)
+        
         print("This is response from openrouter",response.choices[0].message.content)
         return response.choices[0].message.content

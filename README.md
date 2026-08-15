@@ -21,6 +21,8 @@ Each user's documents are completely isolated from other users, ensuring privacy
 | Feature | Description |
 |---|---|
 | **RAG Pipeline** | Answers are grounded in your actual document using vector similarity search — not hallucinated |
+| **Agentic Query Routing** | Uses an intelligent LLM query classifier to determine user intent (`METADATA`, `SUMMARY`, or `DEEP_RAG`). Answers metadata questions instantly, saving vector DB costs and preventing hallucination |
+| **Map-Reduce Semantic Extraction**| During upload, the background pipeline samples chunks and extracts authoritative semantic metadata (Author, Full Summary, Document Type) autonomously via LLM into a JSONB cache |
 | **Async Embedding Generation** | After upload, chunking & embedding happens via FastAPI `BackgroundTasks` — upload returns instantly, processing happens asynchronously |
 | **Simulated Streaming Response** | LLM answers are rendered word-by-word in the frontend for a natural, ChatGPT-like experience |
 | **User Isolation** | Documents are linked to users via `email` as a foreign key — no cross-user data leakage |
@@ -79,11 +81,16 @@ Each user's documents are completely isolated from other users, ensuring privacy
 └─────────────────────────────────────────┘
 ```
 
-### RAG Pipeline (per question)
+### Intelligent RAG Pipeline (per question)
 ```
-Question → Embed query → Vector similarity search
-        → Retrieve top-K chunks → Build prompt
-        → LLM (OpenRouter) → Stream answer to UI
+1. Question → QueryRouter (LLM Classifier)
+2. If Intent == METADATA or SUMMARY:
+   → Answer formulated instantly using cached JSON metadata
+   → Stream answer to UI (Vector Search BYPASSED!)
+3. If Intent == DEEP_RAG:
+   → Embed query → Vector similarity search
+   → Retrieve top-K chunks → Build prompt
+   → LLM (OpenRouter) → Stream answer to UI
 ```
 
 ---
@@ -151,6 +158,9 @@ ALTER TABLE documents_metadata ADD COLUMN IF NOT EXISTS email VARCHAR(255);
 ALTER TABLE documents_metadata
   ADD CONSTRAINT IF NOT EXISTS fk_user_email
   FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE;
+
+-- Enable the Agentic RAG Metadata Cache:
+ALTER TABLE documents_metadata ADD COLUMN IF NOT EXISTS extended_metadata JSONB;
 ```
 
 ---

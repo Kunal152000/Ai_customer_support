@@ -1,7 +1,7 @@
 from uuid import uuid4
 from datetime import datetime
 from sqlalchemy import (DateTime,String,BigInteger,Integer,func,Enum,ForeignKey)
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.documents.enums import DocumentStatus, DocumentType
 from app.database.base import Base
@@ -96,6 +96,11 @@ class DocumentMetadata(Base):
 
     title: Mapped[str | None] = mapped_column(
         String(255),
+        nullable=True,
+    )
+
+    extended_metadata: Mapped[dict | None] = mapped_column(
+        JSONB,
         nullable=True,
     )
 
