@@ -16,12 +16,14 @@ class SessionManager:
 
     @property
     def _cookies(self) -> CookieController:
-        if "cookie_controller" not in st.session_state:
-            st.session_state["cookie_controller"] = CookieController()
-        return st.session_state["cookie_controller"]
+        return st.session_state["_cookie_ctrl"]
 
     def initialize(self) -> None:
         """Bootstrap session state; if a cookie exists, restore the token."""
+        # MUST be evaluated every single script rerun so the component iframe renders
+        # but MUST be stored in session_state to avoid global variable leak!
+        st.session_state["_cookie_ctrl"] = CookieController(key="auth_cookie_ctrl")
+
         defaults = {
             self.ACCESS_TOKEN: None,
             self.USER: None,
