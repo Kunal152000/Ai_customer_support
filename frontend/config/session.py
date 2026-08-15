@@ -12,13 +12,13 @@ class SessionManager:
     AUTHENTICATED = "authenticated"
 
     def __init__(self):
-        self._cookie_ctrl = None  # Lazy — initialised on first use, outside @st.cache_resource
+        pass
 
     @property
     def _cookies(self) -> CookieController:
-        if self._cookie_ctrl is None:
-            self._cookie_ctrl = CookieController()
-        return self._cookie_ctrl
+        if "cookie_controller" not in st.session_state:
+            st.session_state["cookie_controller"] = CookieController()
+        return st.session_state["cookie_controller"]
 
     def initialize(self) -> None:
         """Bootstrap session state; if a cookie exists, restore the token."""

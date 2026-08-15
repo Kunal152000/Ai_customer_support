@@ -12,16 +12,14 @@ st.set_page_config(
     page_title="AI Support",
     page_icon="🤖",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # Hide Streamlit defaults
 hide_streamlit_style = """
 <style>
     #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
     footer {visibility: hidden;}
-    .stApp > header {display: none;}
     .stDeployButton {display: none;}
 </style>
 """
