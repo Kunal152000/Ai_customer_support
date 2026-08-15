@@ -23,5 +23,9 @@ class AuthService:
     def register(self, request: RegisterRequest) -> UserResponse:
         return self.api.register(request)
 
+    def delete_account(self) -> None:
+        self.api.delete_account()
+        self.session_manager.logout()
+
     def logout(self) -> None:
         self.session_manager.logout()

@@ -22,5 +22,8 @@ class AuthAPI:
         response = self.client.get("/auth/me")
         return UserResponse.model_validate(response)
 
+    def delete_account(self) -> None:
+        self.client.delete("/auth/me")
+
     def logout(self) -> None:
         return  # JWT logout is client-side only

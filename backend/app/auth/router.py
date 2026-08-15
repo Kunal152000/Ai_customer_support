@@ -7,6 +7,9 @@ from app.auth.models import User
 from app.auth.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse
 from app.auth.service import AuthService
 from app.database.session import get_db
+import os
+from sqlalchemy import delete, select
+from app.documents.models import DocumentMetadata
 
 health_rotuer = APIRouter(prefix="/health", tags=["Health Check"])
 @health_rotuer.get("/")
@@ -56,3 +59,30 @@ async def login(db: AsyncSession = Depends(get_db),form_data: OAuth2PasswordRequ
 @auth_router.get("/me", response_model=UserResponse)
 async def me(current_user: User = Depends(get_current_user)):
     return UserResponse.model_validate(current_user)
+
+@auth_router.delete("/me")
+async def delete_account(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Deletes the current user's account and all associated documents, chunks, and embeddings entirely.
+    """
+    # 1. Fetch all user documents to wipe physical files off the local disk
+    result = await db.execute(select(DocumentMetadata).where(DocumentMetadata.email == current_user.email))
+    docs = result.scalars().all()
+    
+    for doc in docs:
+        if os.path.exists(doc.storage_location):
+            try:
+                os.remove(doc.storage_location)
+            except Exception as e:
+                print(f"Failed to delete physical file {doc.storage_location}: {e}")
+                
+    # 2. Database Cascade Deletion
+    # PostgreSQL handles the cascading hierarchy natively!
+    # Deleting the user triggers deletion of documents_metadata -> documents_chunks -> document_embeddings
+    await db.execute(delete(User).where(User.email == current_user.email))
+    await db.commit()
+    
+    return {"status": "success", "message": "Account and all associated documents deleted successfully."}

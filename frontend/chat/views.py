@@ -37,6 +37,21 @@ class ChatView:
                 st.session_state["auth_page"] = "login"
                 st.rerun()
 
+            st.divider()
+            with st.expander("⚠️ Danger Zone"):
+                st.markdown("⚠️ **Delete Account**")
+                st.markdown("This action is permanent and will wipe all your documents.")
+                if st.button("Confirm Delete", use_container_width=True, type="primary"):
+                    try:
+                        self.auth_service.delete_account()
+                        st.session_state["auth_page"] = "login"
+                        st.session_state.pop("document_id", None)
+                        st.session_state.pop("document_name", None)
+                        st.session_state.pop("messages", None)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to delete account: {e}")
+
 
         # ── Main area ────────────────────────────────────────────────────────
         if not self.service.has_document():
