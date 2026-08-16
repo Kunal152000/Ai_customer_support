@@ -23,7 +23,7 @@ class GenerationService:
                 intent = route.get("intent", "DEEP_RAG")
                 
                 # Bypass Deep RAG if the router was able to formulate an answer
-                if intent in ("METADATA", "SUMMARY") and route.get("response"):
+                if intent != "DEEP_RAG" and route.get("response"):
                     print(f"[Query Router] Bypassing RAG. Intent: {intent}")
                     return route["response"]
 
