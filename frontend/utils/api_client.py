@@ -28,6 +28,14 @@ class APIClient:
         r.raise_for_status()
         return r.json()
 
+    def post_stream(self, endpoint: str, json=None):
+        """Streams text content back directly from the requests connection instead of parsing JSON."""
+        r = self.client.post(f"{self.settings.BACKEND_URL}{endpoint}", headers=self._headers(), json=json, timeout=self.settings.REQUEST_TIMEOUT, stream=True)
+        r.raise_for_status()
+        for chunk in r.iter_content(chunk_size=None, decode_unicode=True):
+            if chunk:
+                yield chunk
+
     def put(self, endpoint: str, json=None):
         r = self.client.put(f"{self.settings.BACKEND_URL}{endpoint}", headers=self._headers(), json=json, timeout=self.settings.REQUEST_TIMEOUT)
         r.raise_for_status()

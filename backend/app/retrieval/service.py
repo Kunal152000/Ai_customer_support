@@ -30,12 +30,8 @@ class RetrievalService:
         if not similar_chunks:
             return []
 
-        chunk_ids = [e.chunk_id for e in similar_chunks]
-        chunks = await self.chunk_repository.get_chunks_by_ids(chunk_ids)
-        chunk_map = {chunk.id: chunk for chunk in chunks}
-
+        # Because we used a SQL JOIN, we already have the text in memory!
         return [
             {"chunk_id": str(chunk.id), "text": chunk.chunk_text}
-            for e in similar_chunks
-            if (chunk := chunk_map.get(e.chunk_id)) is not None
+            for embedding, chunk in similar_chunks
         ]

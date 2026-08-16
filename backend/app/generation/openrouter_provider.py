@@ -15,7 +15,8 @@ class OpenRouterProvider(AIProvider):
         self, 
         prompt: str, 
         response_format: dict | None = None,
-        temperature: float = 1.0
+        temperature: float = 1.0,
+        stream: bool = False
     ):
    
         kwargs = {
@@ -27,7 +28,15 @@ class OpenRouterProvider(AIProvider):
         if response_format:
             kwargs["response_format"] = response_format
             
+        if stream:
+            kwargs["stream"] = True
+            response = await self.client.chat.completions.create(**kwargs)
+            async def generate():
+                async for chunk in response:
+                    content = chunk.choices[0].delta.content
+                    if content:
+                        yield content
+            return generate()
+            
         response = await self.client.chat.completions.create(**kwargs)
-        
-        print("This is response from openrouter",response.choices[0].message.content)
         return response.choices[0].message.content

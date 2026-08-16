@@ -25,9 +25,9 @@ class ChatAPI:
     def delete_document(self, document_id: str) -> dict:
         return self.client.delete(f"/documents/{document_id}")
 
-    def chat(self, question: str, document_id: str | None = None) -> ChatResponse:
+    def chat_stream(self, question: str, document_id: str | None = None):
         payload = {"question": question}
         if document_id:
             payload["document_id"] = document_id
-        response = self.client.post("/chat", json=payload)
-        return ChatResponse.model_validate(response)
+        # Returns an active generator yielding string chunks
+        return self.client.post_stream("/chat", json=payload)

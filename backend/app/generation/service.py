@@ -14,7 +14,7 @@ class GenerationService:
         self.query_router = QueryRouter()
         self.document_repo = DocumentRepository(db)
 
-    async def answer(self, question: str, document_id: UUID | None = None) -> str:
+    async def answer_stream(self, question: str, document_id: UUID | None = None):
         # Phase 1: Intelligent Query Routing
         if document_id:
             document = await self.document_repo.get_document(document_id)
@@ -25,7 +25,8 @@ class GenerationService:
                 # Bypass Deep RAG if the router was able to formulate an answer
                 if intent != "DEEP_RAG" and route.get("response"):
                     print(f"[Query Router] Bypassing RAG. Intent: {intent}")
-                    return route["response"]
+                    yield route["response"]
+                    return
 
         # Phase 2: Standard Deep RAG Fallback
         print("[Query Router] Executing standard DEEP_RAG pipeline.")
@@ -33,7 +34,7 @@ class GenerationService:
             question=question,
             document_id=document_id,
         )
-        print("This is retrieval response",retrieval_response,type(retrieval_response))
+        
         # Combine all retrieved chunks into a single context string
         context = "\n\n".join(
             chunk["text"] for chunk in retrieval_response
@@ -45,7 +46,7 @@ class GenerationService:
             context=context,
         )
 
-        # Generate the final response from the LLM
-        response = await self.provider.generate_response(prompt)
-
-        return response
+        # Generate the final response from the LLM using stream loop
+        async_gen = await self.provider.generate_response(prompt, stream=True)
+        async for chunk in async_gen:
+            yield chunk

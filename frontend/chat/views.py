@@ -153,21 +153,26 @@ class ChatView:
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                with st.spinner("Thinking…"):
-                    try:
-                        answer = self.service.ask(prompt)
-                    except HTTPError as e:
-                        answer = f"⚠️ Error: {e.response.text if e.response else str(e)}"
-                    except Exception as e:
-                        answer = f"⚠️ Something went wrong: {e}"
-
-                # Simulate streaming: feed the complete answer word-by-word
-                def _stream(text: str):
-                    import time
-                    for word in text.split(" "):
-                        yield word + " "
-                        time.sleep(0.05)
-
-                st.write_stream(_stream(answer))
+                try:
+                    stream_generator = self.service.ask_stream(prompt)
+                    
+                    # Spin until the very first byte comes over the network
+                    with st.spinner("Thinking…"):
+                        first_chunk = next(stream_generator)
+                        
+                    # Reconstruct the generator so we don't lose the first word
+                    def _re_yield():
+                        yield first_chunk
+                        yield from stream_generator
+                        
+                    answer = st.write_stream(_re_yield())
+                except StopIteration:
+                    answer = ""
+                except HTTPError as e:
+                    answer = f"⚠️ Error: {e.response.text if e.response else str(e)}"
+                    st.markdown(answer)
+                except Exception as e:
+                    answer = f"⚠️ Something went wrong: {e}"
+                    st.markdown(answer)
 
             st.session_state["messages"].append({"role": "assistant", "content": answer})

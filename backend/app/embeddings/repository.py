@@ -22,14 +22,14 @@ class DocumentEmbeddingRepository:
         distance = DocumentEmbedding.embedding.cosine_distance(query_embedding)
 
         stmt = (
-            select(DocumentEmbedding)
+            select(DocumentEmbedding, DocumentChunk)
             .join(DocumentChunk, DocumentChunk.id == DocumentEmbedding.chunk_id)
-            .where(DocumentChunk.document_id == document_id)
-            .order_by(distance)
-            .limit(limit)
-        ) if document_id else (
-            select(DocumentEmbedding).order_by(distance).limit(limit)
         )
+        if document_id:
+            stmt = stmt.where(DocumentChunk.document_id == document_id)
+            
+        stmt = stmt.order_by(distance).limit(limit)
 
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        # result.all() returns a list of tuples: [(embedding, chunk), ...]
+        return result.all()
