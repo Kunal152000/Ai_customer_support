@@ -25,6 +25,9 @@ class ChatAPI:
     def delete_document(self, document_id: str) -> dict:
         return self.client.delete(f"/documents/{document_id}")
 
+    def get_document_status(self, document_id: str) -> dict:
+        return self.client.get(f"/documents/{document_id}/status")
+
     def chat_stream(self, question: str, document_id: str | None = None):
         payload = {"question": question}
         if document_id:

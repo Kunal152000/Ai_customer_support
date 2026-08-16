@@ -131,8 +131,10 @@ class ProcessingService:
             uploader_name=document.owner_name,
             chunks=saved_chunks
         )
+        from app.documents.enums import DocumentStatus
         document.extended_metadata = metadata
         document.title = metadata.get("title", document.original_filename)
+        document.status = DocumentStatus.READY
         await self.repository.update_document(document)
 
         return len(saved_chunks)

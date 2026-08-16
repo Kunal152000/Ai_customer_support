@@ -62,6 +62,8 @@ class ChatView:
     # ── Upload / pick stage ───────────────────────────────────────────────────
 
     def _render_upload(self) -> None:
+        trigger_rerun = False
+        
         _, col, _ = st.columns([1, 2, 1])
         with col:
             st.markdown("## 📂 Choose a Document")
@@ -89,11 +91,11 @@ class ChatView:
                             st.session_state["document_id"] = doc["id"]
                             st.session_state["document_name"] = doc["original_filename"]
                             st.session_state.pop("messages", None)
-                            st.rerun()
+                            trigger_rerun = True
                         if c4.button("🗑️", key=f"del_{doc['id']}", help="Delete document completely"):
                             try:
                                 self.service.delete_document(doc["id"])
-                                st.rerun()
+                                trigger_rerun = True
                             except Exception as e:
                                 st.error(f"Failed to delete: {e}")
 
@@ -105,35 +107,80 @@ class ChatView:
                     label_visibility="collapsed",
                 )
                 if file and st.button("🚀 Upload & Process", use_container_width=True, type="primary"):
-                    owner = self.user.name if self.user else "unknown"
-                    with st.spinner("Uploading document…"):
+                    success = False
+                    with st.spinner("Uploading and analyzing document..."):
                         try:
                             self.service.upload_and_process(
                                 file_bytes=file.read(),
                                 filename=file.name,
                             )
-                            st.success("✅ Document uploaded! Embeddings are being generated in the background.")
-                            st.info("⏳ Please wait ~1 minute for processing to complete before starting a chat.")
-                            st.rerun()
+                            success = True
                         except HTTPError as e:
                             st.error(f"Upload failed: {e.response.text if e.response else str(e)}")
                         except Exception as e:
                             st.error(f"Something went wrong: {e}")
+                    
+                    if success:
+                        import time
+                        time.sleep(2.5)
+                        trigger_rerun = True
+
+        if trigger_rerun:
+            st.rerun()
 
     # ── Chat stage ────────────────────────────────────────────────────────────
 
 
     def _render_chat(self) -> None:
-        c1, c2 = st.columns([8, 2])
-        c1.markdown(f"## 💬 Chat — *{st.session_state.get('document_name', 'Document')}*")
+        trigger_rerun = False
         
-        if c2.button("← Back to docs", use_container_width=True):
-            st.session_state.pop("document_id", None)
-            st.session_state.pop("document_name", None)
-            st.session_state.pop("messages", None)
-            st.rerun()
+        # Wrapping in a container completely isolates the DOM mapping 
+        # from _render_upload, preventing Streamlit widget bleeding.
+        with st.container():
+            c1, c2 = st.columns([8, 2])
+            c1.markdown(f"## 💬 Chat — *{st.session_state.get('document_name', 'Document')}*")
             
-        st.divider()
+            if c2.button("← Back to docs", use_container_width=True):
+                st.session_state.pop("document_id", None)
+                st.session_state.pop("document_name", None)
+                st.session_state.pop("messages", None)
+                trigger_rerun = True
+                
+            st.divider()
+
+        if trigger_rerun:
+            st.rerun()
+
+        # Database Status Polling
+        doc_id = st.session_state.get("document_id")
+        if not doc_id:
+            return
+
+        try:
+            status = self.service.api.get_document_status(doc_id).get("status")
+        except:
+            status = "FAILED"
+
+        if status in ["PROCESSING", "UPLOADED"]:
+            placeholder = st.empty()
+            placeholder.info("🧠 AI is currently reading and memorizing your document...")
+            import time
+            while status in ["PROCESSING", "UPLOADED"]:
+                time.sleep(1.5)
+                try:
+                    status = self.service.api.get_document_status(doc_id).get("status")
+                except:
+                    status = "FAILED"
+            # Once ready (or failed), destroy the spinner
+            placeholder.empty()
+
+        if status == "FAILED":
+            st.error("⚠️ Document processing failed! The file could be corrupted or too large.")
+            if st.button("Delete Document"):
+                self.service.delete_document(doc_id)
+                st.session_state.pop("document_id", None)
+                st.rerun()
+            return
 
         # Initialise history
         if "messages" not in st.session_state:
