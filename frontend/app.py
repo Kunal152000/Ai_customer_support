@@ -48,6 +48,8 @@ if not session_manager.is_authenticated():
 
     if st.session_state["auth_page"] == "signup":
         auth_view.signup()
+    elif st.session_state["auth_page"] == "forgot_password":
+        auth_view.forgot_password()
     else:
         auth_view.login()
 

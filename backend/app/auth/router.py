@@ -4,7 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
 from app.auth.models import User
-from app.auth.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse
+from app.auth.schemas import (
+    LoginRequest, RegisterRequest, TokenResponse, UserResponse,
+    ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest
+)
 from app.auth.service import AuthService
 from app.database.session import get_db
 from sqlalchemy import delete, select
@@ -59,6 +62,33 @@ async def login(db: AsyncSession = Depends(get_db),form_data: OAuth2PasswordRequ
 @auth_router.get("/me", response_model=UserResponse)
 async def me(current_user: User = Depends(get_current_user)):
     return UserResponse.model_validate(current_user)
+
+@auth_router.post("/forgot-password")
+async def forgot_password(
+    data: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    service = AuthService(db)
+    await service.forgot_password(data.email)
+    return {"status": "success", "message": "If that email matches an account, we've sent an OTP."}
+
+@auth_router.post("/verify-otp")
+async def verify_otp(
+    data: VerifyOTPRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    service = AuthService(db)
+    await service.verify_otp(data.email, data.otp)
+    return {"status": "success", "message": "OTP is valid."}
+
+@auth_router.post("/reset-password")
+async def reset_password(
+    data: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    service = AuthService(db)
+    await service.reset_password(data.email, data.otp, data.new_password)
+    return {"status": "success", "message": "Password successfully reset."}
 
 @auth_router.delete("/me")
 async def delete_account(

@@ -1,5 +1,8 @@
 from auth.api import AuthAPI
-from auth.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse
+from auth.schemas import (
+    LoginRequest, RegisterRequest, TokenResponse, UserResponse,
+    ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest
+)
 from config.session import SessionManager
 
 
@@ -22,6 +25,15 @@ class AuthService:
 
     def register(self, request: RegisterRequest) -> UserResponse:
         return self.api.register(request)
+        
+    def forgot_password(self, request: ForgotPasswordRequest) -> None:
+        self.api.forgot_password(request)
+
+    def verify_otp(self, request: VerifyOTPRequest) -> None:
+        self.api.verify_otp(request)
+
+    def reset_password(self, request: ResetPasswordRequest) -> None:
+        self.api.reset_password(request)
 
     def delete_account(self) -> None:
         self.api.delete_account()
